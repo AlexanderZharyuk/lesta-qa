@@ -115,6 +115,7 @@ def get_changed_ships(inner_table_name, primary_key, changed_by):
         SELECT ship FROM Ships 
         INNER JOIN {inner_table_name} on 
         {inner_table_name}.{primary_key} = Ships.{primary_key}
+        WHERE Ships.{primary_key}=(?)
         """
 
     main_db_connection = sqlite3.connect("ships.db")
