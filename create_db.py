@@ -39,7 +39,8 @@ def create_tables() -> None:
     connection.commit()
 
 
-def record_to_ship(max_records: int) -> bool:
+def record_to_ship(max_records: int, max_weapons_id: int, max_hull_id: int,
+                   max_engine_id: int) -> bool:
     connection = sqlite3.connect("ships.db")
     cursor = connection.cursor()
     number_of_records = 0
@@ -47,9 +48,9 @@ def record_to_ship(max_records: int) -> bool:
     while True:
         params = (
             f"Ship-{random.randint(1, max_records)}",
-            f"Weapon-{random.randint(1, 20)}",
-            f"Hull-{random.randint(1, 15)}",
-            f"Engine-{random.randint(1, 6)}"
+            f"Weapon-{random.randint(1, max_weapons_id)}",
+            f"Hull-{random.randint(1, max_hull_id)}",
+            f"Engine-{random.randint(1, max_engine_id)}"
         )
         try:
             cursor.execute(
@@ -169,7 +170,12 @@ def fill_the_tables() -> None:
     max_records_to_hulls_table = 5
     max_records_to_engines_table = 6
 
-    record_to_ship(max_records_to_ship_table)
+    record_to_ship(
+        max_records_to_ship_table,
+        max_records_to_weapons_table,
+        max_records_to_hulls_table,
+        max_records_to_engines_table
+    )
     record_to_weapons(max_records_to_weapons_table)
     record_to_hulls(max_records_to_hulls_table)
     record_to_engines(max_records_to_engines_table)
