@@ -5,114 +5,6 @@ import sqlite3
 import pytest
 
 
-def get_changes_in_ship_characteristic():
-    """
-    При инициализации теста делает рандомные изменения в таблицах, после чего
-    отправляет тесты для проверки на изменение ключевых характеристик у
-    корабля в тест-функцию.
-    :return: Возвращает значение в виде списка
-    list[(new_values, expected_values)]
-    """
-
-    if not os.path.exists("ships_dumps.sqlite3"):
-        create_db_dump()
-        random_change_in_tables()
-
-    connection = sqlite3.connect("ships.sqlite3")
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM Ships")
-
-    changed_db = cursor.fetchall()
-    connection = sqlite3.connect("ships_dumps.sqlite3")
-    cursor = connection.cursor()
-
-    cursor.execute("SELECT * FROM Ships")
-    dump_db = cursor.fetchall()
-
-    return list(zip(changed_db, dump_db))
-
-
-def get_table_changes(sql_query):
-    """
-    Возвращает список значений из таблицы, которые изменились после рандомных
-    изменений.
-    :param sql_query: Запрос, по которому получаем значения из таблицы
-    :return: Список измененных значений
-    """
-    main_db_connection = sqlite3.connect("ships.sqlite3")
-    main_db_cursor = main_db_connection.cursor()
-    main_db_cursor.execute(sql_query)
-    main_db_ships = main_db_cursor.fetchall()
-
-    dump_db_connection = sqlite3.connect("ships_dumps.sqlite3")
-    dump_db_cursor = dump_db_connection.cursor()
-    dump_db_cursor.execute(sql_query)
-    dump_db_ships = dump_db_cursor.fetchall()
-
-    return list(zip(main_db_ships, dump_db_ships))
-
-
-def create_tests(values):
-    """
-    Создает тест-кейсы из новых и старых значений в таблице
-    :param values: Список значений для сравнений
-    :return: Возваращает список с тестами, в который не включены тесты, если
-    у корабля изменилась главная характеристика (оружие, оружие, корпус, движок),
-    т.к эти тесты создаются в функции get_changes_in_ship_characteristic.
-    """
-
-    tests = []
-    for rows in values:
-        new_characteristic = rows[0][1]
-        old_characteristic = rows[1][1]
-
-        if new_characteristic != old_characteristic:
-            tests.append(
-                pytest.param(
-                    rows[0], rows[1], marks=pytest.mark.skip(
-                        reason="checked in other test"
-                    )
-                )
-            )
-            continue
-        tests.append((rows[0], rows[1]))
-    return tests
-
-
-def get_ships_weapons_changes():
-    all_ships_sql_query = """
-            SELECT ship, w.weapon, reload_speed, rotational_speed, diameter, 
-            power_volley, count FROM Ships 
-            INNER JOIN weapons w on Ships.weapon = w.weapon 
-            """
-
-    values_in_table = get_table_changes(all_ships_sql_query)
-    values_for_tests = create_tests(values_in_table)
-    return values_for_tests
-
-
-def get_ships_hulls_changes():
-    all_ships_sql_query = """
-    SELECT ship, h.hull, armor, type, capacity FROM Ships
-    INNER JOIN hulls h on Ships.hull = h.hull
-    """
-
-    values_in_table = get_table_changes(all_ships_sql_query)
-    values_for_tests = create_tests(values_in_table)
-    return values_for_tests
-
-
-def get_ships_engines_changes():
-    all_ships_sql_query = """
-    SELECT ship, e.engine, power, type FROM Ships
-    INNER JOIN engines e on Ships.engine = e.engine
-    """
-
-    values_in_table = get_table_changes(all_ships_sql_query)
-    values_for_tests = create_tests(values_in_table)
-    return values_for_tests
-
-
 def create_db_dump():
     connection = sqlite3.connect("ships.sqlite3")
     with open("dump.sql", "w") as dump_file:
@@ -223,6 +115,113 @@ def random_change_in_tables():
 
     for _ in range(50):
         change_random_ship_characteristic()
+
+
+def get_changes_in_ship_characteristic():
+    """
+    При инициализации теста делает рандомные изменения в таблицах, после чего
+    отправляет тесты для проверки на изменение ключевых характеристик у
+    корабля в тест-функцию.
+    :return: Возвращает значение в виде списка
+    list[(new_values, expected_values)]
+    """
+
+    if not os.path.exists("ships_dumps.sqlite3"):
+        create_db_dump()
+        random_change_in_tables()
+
+    connection = sqlite3.connect("ships.sqlite3")
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM Ships")
+
+    changed_db = cursor.fetchall()
+    connection = sqlite3.connect("ships_dumps.sqlite3")
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM Ships")
+    dump_db = cursor.fetchall()
+
+    return list(zip(changed_db, dump_db))
+
+
+def get_table_changes(sql_query):
+    """
+    Возвращает список из строк основной таблицы и дампа для будущей проверки.
+    :param sql_query: Запрос, по которому получаем значения из таблицы
+    :return: Список строк из таблиц list[((main_table_row_1), (dump_table_row_2))...]
+    """
+    main_db_connection = sqlite3.connect("ships.sqlite3")
+    main_db_cursor = main_db_connection.cursor()
+    main_db_cursor.execute(sql_query)
+    main_db_ships = main_db_cursor.fetchall()
+
+    dump_db_connection = sqlite3.connect("ships_dumps.sqlite3")
+    dump_db_cursor = dump_db_connection.cursor()
+    dump_db_cursor.execute(sql_query)
+    dump_db_ships = dump_db_cursor.fetchall()
+
+    return list(zip(main_db_ships, dump_db_ships))
+
+
+def create_tests(values):
+    """
+    Создает тест-кейсы из новых и старых значений в таблице
+    :param values: Список значений для сравнений
+    :return: Возваращает список с тестами, в который не включены тесты, если
+    у корабля изменилась главная характеристика (оружие, корпус, движок),
+    т.к эти тесты создаются в функции get_changes_in_ship_characteristic.
+    """
+
+    tests = []
+    for rows in values:
+        new_characteristic = rows[0][1]
+        old_characteristic = rows[1][1]
+
+        if new_characteristic != old_characteristic:
+            tests.append(
+                pytest.param(
+                    rows[0], rows[1], marks=pytest.mark.skip(
+                        reason="checked in other test"
+                    )
+                )
+            )
+            continue
+        tests.append((rows[0], rows[1]))
+    return tests
+
+
+def get_ships_weapons_changes():
+    all_ships_sql_query = """
+            SELECT ship, w.weapon, reload_speed, rotational_speed, diameter, 
+            power_volley, count FROM Ships 
+            INNER JOIN weapons w on Ships.weapon = w.weapon 
+            """
+
+    values_in_table = get_table_changes(all_ships_sql_query)
+    values_for_tests = create_tests(values_in_table)
+    return values_for_tests
+
+
+def get_ships_hulls_changes():
+    all_ships_sql_query = """
+    SELECT ship, h.hull, armor, type, capacity FROM Ships
+    INNER JOIN hulls h on Ships.hull = h.hull
+    """
+
+    values_in_table = get_table_changes(all_ships_sql_query)
+    values_for_tests = create_tests(values_in_table)
+    return values_for_tests
+
+
+def get_ships_engines_changes():
+    all_ships_sql_query = """
+    SELECT ship, e.engine, power, type FROM Ships
+    INNER JOIN engines e on Ships.engine = e.engine
+    """
+
+    values_in_table = get_table_changes(all_ships_sql_query)
+    values_for_tests = create_tests(values_in_table)
+    return values_for_tests
 
 
 @pytest.mark.parametrize(
