@@ -3,7 +3,7 @@ import sqlite3
 
 
 def create_tables() -> None:
-    connection = sqlite3.connect("ships.db")
+    connection = sqlite3.connect("ships.sqlite3")
     cursor = connection.cursor()
 
     cursor.execute(
@@ -41,7 +41,7 @@ def create_tables() -> None:
 
 def record_to_ship(max_records: int, max_weapons_id: int, max_hull_id: int,
                    max_engine_id: int) -> bool:
-    connection = sqlite3.connect("ships.db")
+    connection = sqlite3.connect("ships.sqlite3")
     cursor = connection.cursor()
     number_of_records = 0
 
@@ -70,7 +70,7 @@ def record_to_ship(max_records: int, max_weapons_id: int, max_hull_id: int,
 
 
 def record_to_weapons(max_records: int) -> bool:
-    connection = sqlite3.connect("ships.db")
+    connection = sqlite3.connect("ships.sqlite3")
     cursor = connection.cursor()
     number_of_records = 0
 
@@ -104,7 +104,7 @@ def record_to_weapons(max_records: int) -> bool:
 
 
 def record_to_hulls(max_records: int) -> bool:
-    connection = sqlite3.connect("ships.db")
+    connection = sqlite3.connect("ships.sqlite3")
     cursor = connection.cursor()
     number_of_records = 0
 
@@ -135,7 +135,7 @@ def record_to_hulls(max_records: int) -> bool:
 
 
 def record_to_engines(max_records: int) -> bool:
-    connection = sqlite3.connect("ships.db")
+    connection = sqlite3.connect("ships.sqlite3")
     cursor = connection.cursor()
     number_of_records = 0
 

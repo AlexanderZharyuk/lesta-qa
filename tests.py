@@ -14,14 +14,16 @@ def get_changes_in_ship_characteristic():
     list[(new_values, expected_values)]
     """
 
-    create_db_dump()
-    random_change_in_tables()
-    connection = sqlite3.connect("ships.db")
+    if not os.path.exists("ships_dumps.sqlite3"):
+        create_db_dump()
+        random_change_in_tables()
+
+    connection = sqlite3.connect("ships.sqlite3")
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM Ships")
 
     changed_db = cursor.fetchall()
-    connection = sqlite3.connect("ships_dump.db")
+    connection = sqlite3.connect("ships_dumps.sqlite3")
     cursor = connection.cursor()
 
     cursor.execute("SELECT * FROM Ships")
@@ -37,12 +39,12 @@ def get_table_changes(sql_query):
     :param sql_query: Запрос, по которому получаем значения из таблицы
     :return: Список измененных значений
     """
-    main_db_connection = sqlite3.connect("ships.db")
+    main_db_connection = sqlite3.connect("ships.sqlite3")
     main_db_cursor = main_db_connection.cursor()
     main_db_cursor.execute(sql_query)
     main_db_ships = main_db_cursor.fetchall()
 
-    dump_db_connection = sqlite3.connect("ships_dump.db")
+    dump_db_connection = sqlite3.connect("ships_dumps.sqlite3")
     dump_db_cursor = dump_db_connection.cursor()
     dump_db_cursor.execute(sql_query)
     dump_db_ships = dump_db_cursor.fetchall()
@@ -58,6 +60,7 @@ def create_tests(values):
     у корабля изменилась главная характеристика (оружие, оружие, корпус, движок),
     т.к эти тесты создаются в функции get_changes_in_ship_characteristic.
     """
+
     tests = []
     for rows in values:
         new_characteristic = rows[0][1]
@@ -111,12 +114,12 @@ def get_ships_engines_changes():
 
 
 def create_db_dump():
-    connection = sqlite3.connect("ships.db")
+    connection = sqlite3.connect("ships.sqlite3")
     with open("dump.sql", "w") as dump_file:
         for line in connection.iterdump():
             dump_file.write(f"{line}\n")
 
-    connection = sqlite3.connect("ships_dump.db")
+    connection = sqlite3.connect("ships_dumps.sqlite3")
     cursor = connection.cursor()
     with open("dump.sql", "r") as dump_file:
         cursor.executescript(dump_file.read())
@@ -124,7 +127,7 @@ def create_db_dump():
 
 
 def change_random_ship_characteristic():
-    connection = sqlite3.connect("ships.db")
+    connection = sqlite3.connect("ships.sqlite3")
     cursor = connection.cursor()
 
     cursor.execute(
@@ -174,7 +177,7 @@ def change_random_ship_characteristic():
 
 
 def change_random_ship_part(table_name: str):
-    connection = sqlite3.connect("ships.db")
+    connection = sqlite3.connect("ships.sqlite3")
     cursor = connection.cursor()
 
     cursor.execute(
@@ -203,7 +206,7 @@ def change_random_ship_part(table_name: str):
 
 
 def random_change_in_tables():
-    connection = sqlite3.connect("ships.db")
+    connection = sqlite3.connect("ships.sqlite3")
     cursor = connection.cursor()
 
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
@@ -299,7 +302,9 @@ def test_ships_hulls(received_values, expected_values):
     assert received_values == expected_values, error_message
 
 
-@pytest.mark.parametrize("received_values, expected_values", get_ships_engines_changes())
+@pytest.mark.parametrize(
+    "received_values, expected_values", get_ships_engines_changes()
+)
 def test_ships_engines(received_values, expected_values):
     new_values = {
         "ship": received_values[0],
