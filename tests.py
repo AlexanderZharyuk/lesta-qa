@@ -4,22 +4,24 @@ import sqlite3
 
 import pytest
 
+from environs import Env
 
-def create_db_dump():
-    connection = sqlite3.connect("ships.sqlite3")
+
+def create_db_dump(main_db_name: str, dump_db_name: str):
+    connection = sqlite3.connect(main_db_name)
     with open("dump.sql", "w") as dump_file:
         for line in connection.iterdump():
             dump_file.write(f"{line}\n")
 
-    connection = sqlite3.connect("ships_dumps.sqlite3")
+    connection = sqlite3.connect(dump_db_name)
     cursor = connection.cursor()
     with open("dump.sql", "r") as dump_file:
         cursor.executescript(dump_file.read())
     os.remove("dump.sql")
 
 
-def change_random_ship_characteristic():
-    connection = sqlite3.connect("ships.sqlite3")
+def change_random_ship_characteristic(db_name: str):
+    connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
 
     cursor.execute(
@@ -68,8 +70,8 @@ def change_random_ship_characteristic():
     connection.commit()
 
 
-def change_random_ship_part(table_name: str):
-    connection = sqlite3.connect("ships.sqlite3")
+def change_random_ship_part(db_name: str, table_name: str):
+    connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
 
     cursor.execute(
@@ -84,7 +86,8 @@ def change_random_ship_part(table_name: str):
         '''
     )
     max_records = len(cursor.fetchall())
-    random_part_of_ship = f"{columns[0].capitalize()}-{random.randint(1, max_records)}"
+    random_part_of_ship = f"{columns[0].capitalize()}-" \
+                          f"{random.randint(1, max_records)}"
     random_characteristic = random.choice(columns[1:])
     new_characteristic = random.randint(1, 20)
 
@@ -97,8 +100,8 @@ def change_random_ship_part(table_name: str):
     connection.commit()
 
 
-def random_change_in_tables():
-    connection = sqlite3.connect("ships.sqlite3")
+def random_change_in_tables(db_name: str):
+    connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
 
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
@@ -111,51 +114,30 @@ def random_change_in_tables():
         tables_changes[table] = random.randint(1, 30)
 
     for table, changes in tables_changes.items():
-        [change_random_ship_part(table) for _ in range(changes)]
+        [change_random_ship_part(db_name, table) for _ in range(changes)]
 
     for _ in range(50):
-        change_random_ship_characteristic()
+        change_random_ship_characteristic(db_name=db_name)
 
 
-def get_changes_in_ship_characteristic():
-    """
-    При инициализации теста делает рандомные изменения в таблицах, после чего
-    отправляет тесты для проверки на изменение ключевых характеристик у
-    корабля в тест-функцию.
-    :return: Возвращает значение в виде списка
-    list[(new_values, expected_values)]
-    """
-
-    if not os.path.exists("ships_dumps.sqlite3"):
-        create_db_dump()
-        random_change_in_tables()
-
-    connection = sqlite3.connect("ships.sqlite3")
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM Ships")
-
-    changed_db = cursor.fetchall()
-    connection = sqlite3.connect("ships_dumps.sqlite3")
-    cursor = connection.cursor()
-
-    cursor.execute("SELECT * FROM Ships")
-    dump_db = cursor.fetchall()
-
-    return list(zip(changed_db, dump_db))
-
-
-def get_table_changes(sql_query):
+def get_table_changes(sql_query: str):
     """
     Возвращает список из строк основной таблицы и дампа для будущей проверки.
     :param sql_query: Запрос, по которому получаем значения из таблицы
-    :return: Список строк из таблиц list[((main_table_row_1), (dump_table_row_2))...]
+    :return: Список строк из таблиц list[((main_table_row_1), (dump_table_row_2))]
     """
-    main_db_connection = sqlite3.connect("ships.sqlite3")
+    env = Env()
+    env.read_env()
+
+    main_db_name = env.str("MAIN_DB_NAME", "ships.sqlite3")
+    dump_db_name = env.str("DUMP_DB_NAME", "ships_dump.sqlite3")
+
+    main_db_connection = sqlite3.connect(main_db_name)
     main_db_cursor = main_db_connection.cursor()
     main_db_cursor.execute(sql_query)
     main_db_ships = main_db_cursor.fetchall()
 
-    dump_db_connection = sqlite3.connect("ships_dumps.sqlite3")
+    dump_db_connection = sqlite3.connect(dump_db_name)
     dump_db_cursor = dump_db_connection.cursor()
     dump_db_cursor.execute(sql_query)
     dump_db_ships = dump_db_cursor.fetchall()
@@ -188,6 +170,39 @@ def create_tests(values):
             continue
         tests.append((rows[0], rows[1]))
     return tests
+
+
+def get_changes_in_ship_characteristic():
+    """
+    При инициализации теста делает рандомные изменения в таблицах, после чего
+    отправляет тесты для проверки на изменение ключевых характеристик у
+    корабля в тест-функцию.
+    :return: Возвращает значение в виде списка
+    list[(new_values, expected_values)]
+    """
+
+    env = Env()
+    env.read_env()
+
+    main_db_name = env.str("MAIN_DB_NAME", "ships.sqlite3")
+    dump_db_name = env.str("DUMP_DB_NAME", "ships_dump.sqlite3")
+
+    if not os.path.exists(dump_db_name):
+        create_db_dump(main_db_name=main_db_name, dump_db_name=dump_db_name)
+        random_change_in_tables(db_name=main_db_name)
+
+    connection = sqlite3.connect(main_db_name)
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM Ships")
+
+    changed_db = cursor.fetchall()
+    connection = sqlite3.connect(dump_db_name)
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM Ships")
+    dump_db = cursor.fetchall()
+
+    return list(zip(changed_db, dump_db))
 
 
 def get_ships_weapons_changes():
