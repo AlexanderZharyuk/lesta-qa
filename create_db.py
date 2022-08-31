@@ -1,9 +1,11 @@
 import random
 import sqlite3
 
+from environs import Env
 
-def create_tables() -> None:
-    connection = sqlite3.connect("ships.sqlite3")
+
+def create_tables(db_name: str) -> None:
+    connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
 
     cursor.execute(
@@ -39,9 +41,9 @@ def create_tables() -> None:
     connection.commit()
 
 
-def record_to_ship(max_records: int, max_weapons_id: int, max_hull_id: int,
-                   max_engine_id: int) -> bool:
-    connection = sqlite3.connect("ships.sqlite3")
+def record_to_ship(db_name: str, max_records: int, max_weapons_id: int,
+                   max_hull_id: int, max_engine_id: int) -> bool:
+    connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
     number_of_records = 0
 
@@ -69,8 +71,8 @@ def record_to_ship(max_records: int, max_weapons_id: int, max_hull_id: int,
             return True
 
 
-def record_to_weapons(max_records: int) -> bool:
-    connection = sqlite3.connect("ships.sqlite3")
+def record_to_weapons(db_name: str, max_records: int) -> bool:
+    connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
     number_of_records = 0
 
@@ -103,8 +105,8 @@ def record_to_weapons(max_records: int) -> bool:
             return True
 
 
-def record_to_hulls(max_records: int) -> bool:
-    connection = sqlite3.connect("ships.sqlite3")
+def record_to_hulls(db_name: str, max_records: int) -> bool:
+    connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
     number_of_records = 0
 
@@ -134,8 +136,8 @@ def record_to_hulls(max_records: int) -> bool:
             return True
 
 
-def record_to_engines(max_records: int) -> bool:
-    connection = sqlite3.connect("ships.sqlite3")
+def record_to_engines(db_name: str, max_records: int) -> bool:
+    connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
     number_of_records = 0
 
@@ -164,26 +166,31 @@ def record_to_engines(max_records: int) -> bool:
             return True
 
 
-def fill_the_tables() -> None:
+def fill_the_tables(db_name: str) -> None:
     max_records_to_ship_table = 200
     max_records_to_weapons_table = 20
     max_records_to_hulls_table = 5
     max_records_to_engines_table = 6
 
     record_to_ship(
-        max_records_to_ship_table,
-        max_records_to_weapons_table,
-        max_records_to_hulls_table,
-        max_records_to_engines_table
+        db_name=db_name,
+        max_records=max_records_to_ship_table,
+        max_weapons_id=max_records_to_weapons_table,
+        max_hull_id=max_records_to_hulls_table,
+        max_engine_id=max_records_to_engines_table
     )
-    record_to_weapons(max_records_to_weapons_table)
-    record_to_hulls(max_records_to_hulls_table)
-    record_to_engines(max_records_to_engines_table)
+    record_to_weapons(db_name, max_records_to_weapons_table)
+    record_to_hulls(db_name, max_records_to_hulls_table)
+    record_to_engines(db_name, max_records_to_engines_table)
 
 
 def main():
-    create_tables()
-    fill_the_tables()
+    env = Env()
+    env.read_env()
+
+    db_name = env.str("MAIN_DB_NAME", "ships.sqlite3")
+    create_tables(db_name=db_name)
+    fill_the_tables(db_name=db_name)
 
 
 if __name__ == "__main__":
