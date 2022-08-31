@@ -277,10 +277,10 @@ def test_ships_weapons(received_values, expected_values):
     }
     for _ in received_values:
         error_message = f"{new_values['ship']}, {new_values['weapon']}"
-        for key, value in new_values.items():
-            if new_values[key] != old_values[key]:
+        for ship_characteristic_name, ship_characteristic_value in new_values.items():
+            if new_values[ship_characteristic_name] != old_values[ship_characteristic_name]:
                 error_message += f"""
-                {key}: expected {old_values[key]}, was {value}
+                {ship_characteristic_name}: expected {old_values[ship_characteristic_name]}, was {ship_characteristic_value}
                 """
 
     assert received_values == expected_values, error_message
@@ -307,10 +307,10 @@ def test_ships_hulls(received_values, expected_values):
     }
     for _ in received_values:
         error_message = f"{new_values['ship']}, {new_values['hull']}"
-        for key, value in new_values.items():
-            if new_values[key] != old_values[key]:
+        for ship_characteristic_name, ship_characteristic_value in new_values.items():
+            if new_values[ship_characteristic_name] != old_values[ship_characteristic_name]:
                 error_message += f"""
-                {key}: expected {old_values[key]}, was {value}
+                {ship_characteristic_name}: expected {old_values[ship_characteristic_name]}, was {ship_characteristic_value}
                 """
 
     assert received_values == expected_values, error_message
@@ -335,10 +335,10 @@ def test_ships_engines(received_values, expected_values):
     }
     for _ in received_values:
         error_message = f"{new_values['ship']}, {new_values['engine']}"
-        for key, value in new_values.items():
-            if new_values[key] != old_values[key]:
+        for ship_characteristic_name, ship_characteristic_value in new_values.items():
+            if new_values[ship_characteristic_name] != old_values[ship_characteristic_name]:
                 error_message += f"""
-                {key}: expected {old_values[key]}, was {value}
+                {ship_characteristic_name}: expected {old_values[ship_characteristic_name]}, was {ship_characteristic_value}
                 """
 
     assert received_values == expected_values, error_message
