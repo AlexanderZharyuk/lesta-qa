@@ -1,8 +1,6 @@
 import random
 import sqlite3
 
-from typing import Optional
-
 from environs import Env
 
 
@@ -44,7 +42,7 @@ def create_tables(db_name: str) -> None:
 
 
 def create_ships(db_name: str, max_records: int, max_weapons_id: int,
-                 max_hull_id: int, max_engine_id: int) -> Optional[bool, None]:
+                 max_hull_id: int, max_engine_id: int) -> bool | None:
     connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
     number_of_records = 0
