@@ -2,6 +2,8 @@ import os
 import random
 import sqlite3
 
+from collections import namedtuple
+
 import pytest
 
 from environs import Env
@@ -256,29 +258,24 @@ def test_ships_table(received_values, expected_values):
     "received_values, expected_values", get_ships_weapons_changes()
 )
 def test_ships_weapons(received_values, expected_values):
-    new_values = {
-        "ship": received_values[0],
-        "weapon": received_values[1],
-        "reload speed": received_values[2],
-        "rotational speed": received_values[3],
-        "diameter": received_values[4],
-        "power volley": received_values[5],
-        "count": received_values[6],
-    }
+    Weapon = namedtuple("Weapon", [
+        "ship",
+        "weapon",
+        "reload_speed",
+        "rotational_speed",
+        "diameter",
+        "power_volley",
+        "count"
+    ])
+    new_values = Weapon(*received_values)._asdict()
+    old_values = Weapon(*expected_values)._asdict()
 
-    old_values = {
-        "ship": expected_values[0],
-        "weapon": expected_values[1],
-        "reload speed": expected_values[2],
-        "rotational speed": expected_values[3],
-        "diameter": expected_values[4],
-        "power volley": expected_values[5],
-        "count": expected_values[6],
-    }
     for _ in received_values:
         error_message = f"{new_values['ship']}, {new_values['weapon']}"
-        for ship_characteristic_name, ship_characteristic_value in new_values.items():
-            if new_values[ship_characteristic_name] != old_values[ship_characteristic_name]:
+        for ship_characteristic_name, ship_characteristic_value in \
+                new_values.items():
+            if new_values[ship_characteristic_name] != \
+                    old_values[ship_characteristic_name]:
                 error_message += f"""
                 {ship_characteristic_name}: expected {old_values[ship_characteristic_name]}, was {ship_characteristic_value}
                 """
@@ -290,25 +287,16 @@ def test_ships_weapons(received_values, expected_values):
     "received_values, expected_values", get_ships_hulls_changes()
 )
 def test_ships_hulls(received_values, expected_values):
-    new_values = {
-        "ship": received_values[0],
-        "hull": received_values[1],
-        "armor": received_values[2],
-        "type": received_values[3],
-        "capacity": received_values[4],
-    }
+    Hull = namedtuple("Hull", ["ship", "hull", "armor", "type", "capacity"])
+    new_values = Hull(*received_values)._asdict()
+    old_values = Hull(*expected_values)._asdict()
 
-    old_values = {
-        "ship": expected_values[0],
-        "hull": expected_values[1],
-        "armor": expected_values[2],
-        "type": expected_values[3],
-        "capacity": expected_values[4],
-    }
     for _ in received_values:
         error_message = f"{new_values['ship']}, {new_values['hull']}"
-        for ship_characteristic_name, ship_characteristic_value in new_values.items():
-            if new_values[ship_characteristic_name] != old_values[ship_characteristic_name]:
+        for ship_characteristic_name, ship_characteristic_value in \
+                new_values.items():
+            if new_values[ship_characteristic_name] != \
+                    old_values[ship_characteristic_name]:
                 error_message += f"""
                 {ship_characteristic_name}: expected {old_values[ship_characteristic_name]}, was {ship_characteristic_value}
                 """
@@ -320,23 +308,16 @@ def test_ships_hulls(received_values, expected_values):
     "received_values, expected_values", get_ships_engines_changes()
 )
 def test_ships_engines(received_values, expected_values):
-    new_values = {
-        "ship": received_values[0],
-        "engine": received_values[1],
-        "power": received_values[2],
-        "type": received_values[3],
-    }
+    Engine = namedtuple("Engine", ["ship", "engine", "power", "type"])
+    new_values = Engine(*received_values)._asdict()
+    old_values = Engine(*expected_values)._asdict()
 
-    old_values = {
-        "ship": expected_values[0],
-        "engine": expected_values[1],
-        "power": expected_values[2],
-        "type": expected_values[3],
-    }
     for _ in received_values:
         error_message = f"{new_values['ship']}, {new_values['engine']}"
-        for ship_characteristic_name, ship_characteristic_value in new_values.items():
-            if new_values[ship_characteristic_name] != old_values[ship_characteristic_name]:
+        for ship_characteristic_name, ship_characteristic_value in \
+                new_values.items():
+            if new_values[ship_characteristic_name] != \
+                    old_values[ship_characteristic_name]:
                 error_message += f"""
                 {ship_characteristic_name}: expected {old_values[ship_characteristic_name]}, was {ship_characteristic_value}
                 """
